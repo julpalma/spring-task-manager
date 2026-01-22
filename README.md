@@ -23,7 +23,7 @@ It supports creating tasks, completing them, and listing tasks with filters and 
 
 ## API Endpoints
 
-POST /v1/api/tasks → create a new task
-POST /v1/api/tasks/{id}/complete → mark a task as completed
-GET /v1/api/tasks → list tasks with optional status and sort parameters
-GET /v1/api/tasks/status/{status} → list tasks filtered by status
+- POST /v1/api/tasks → create a new task
+- POST /v1/api/tasks/{id}/complete → mark a task as completed
+- GET /v1/api/tasks → list tasks with optional status and sort parameters
+- GET /v1/api/tasks/status/{status} → list tasks filtered by status
