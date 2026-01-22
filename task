@@ -1,0 +1,66 @@
+PROBLEM STATEMENT
+You are tasked with building a “Task Manager API + optional frontend”.
+
+It should allow users to:
+Create a task with:
+title (string, required, max length 100),
+optional description (string, up to 500),
+status (default: “pending”).
+View all tasks, with the ability to:
+filter by status,
+sort by creation time.
+Mark a task as completed.
+
+REQUIREMENTS
+Choose the language/framework you are most comfortable with.
+You must design clean APIs (REST or GraphQL), or a structured module/library if working in another environment.
+Persistence should be considered:
+Minimum: in-memory storage.
+Bonus: SQLite/Postgres/JSON file.
+Add error handling and validation (e.g., empty titles, invalid IDs).
+Demonstrate unit tests (for at least core functions).
+(Optional) Add one or more of:
+simple user authentication (e.g., user ID on each task),
+pagination for task listing,
+small frontend (web or CLI),
+Dockerfile or instructions for running.
+STARTER TEMPLATES
+
+Pseudocode Starter (Universal)
+DATA STRUCTURE
+ Task: id, title, description, status, created_at
+ tasks: list of Task
+ next_id: int
+
+API ENDPOINTS
+ POST /tasks -> validate input, create task
+ GET /tasks?status=...&sort=created_at -> list filtered/sorted tasks
+ POST /tasks/{id}/complete -> mark as completed
+ (Optional) Auth: user_id on each task
+
+TESTS
+ - create task with valid/invalid inputs
+ - complete task with valid/invalid id
+ - list tasks with filters and sorting
+
+Java – Spring Boot
+package com.example.taskmanager.model;
+
+import java.time.LocalDateTime;
+
+public class Task {
+   private int id;
+   private String title;
+   private String description;
+   private String status = "pending";
+   private LocalDateTime createdAt;
+
+   public Task(int id, String title, String description) {
+       this.id = id;
+       this.title = title;
+       this.description = description != null ? description : "";
+       this.createdAt = LocalDateTime.now();
+   }
+
+   // getters and setters omitted for brevity
+}
