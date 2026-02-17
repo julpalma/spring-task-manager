@@ -1,6 +1,6 @@
 package org.example.repository;
 
-import org.example.model.Task;
+import org.example.entities.Task;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 
