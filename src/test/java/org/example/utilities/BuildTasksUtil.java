@@ -2,6 +2,7 @@ package org.example.utilities;
 
 import org.example.dto.TaskRequest;
 import org.example.entities.Task;
+import org.example.enums.TaskStatus;
 
 import java.time.LocalDateTime;
 
@@ -22,7 +23,7 @@ public class BuildTasksUtil {
                 .id(1)
                 .title("Test title")
                 .description("Test description")
-                .status("completed")
+                .status(TaskStatus.PENDING)
                 .createdAt(dateTime)
                 .build();
     }

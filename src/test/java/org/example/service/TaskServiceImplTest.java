@@ -2,6 +2,7 @@ package org.example.service;
 
 import org.example.dto.TaskRequest;
 import org.example.entities.Task;
+import org.example.enums.TaskStatus;
 import org.example.repository.TaskRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +10,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
@@ -43,7 +47,7 @@ public class TaskServiceImplTest {
 
         assertNotNull(result);
         assertEquals("Test title", result.getTitle());
-        assertEquals("completed", result.getStatus());
+        assertEquals(TaskStatus.PENDING, result.getStatus());
         assertEquals("2026-02-16T00:00", result.getCreatedAt().toString());
         verify(taskRepositoryMock, times(1)).save(any());
     }
@@ -65,7 +69,7 @@ public class TaskServiceImplTest {
 
         assertThat(savedTask.getTitle()).isEqualTo("Test title");
         assertThat(savedTask.getDescription()).isEqualTo("Test description");
-        assertThat(savedTask.getStatus()).isEqualTo("pending");
+        assertThat(savedTask.getStatus()).isEqualTo(TaskStatus.PENDING);
         assertThat(savedTask.getCreatedAt()).isNotNull();
         assertThat(savedTask.getCreatedAt()).isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.SECONDS));
     }
@@ -74,19 +78,19 @@ public class TaskServiceImplTest {
     void getTaskByStatus_shouldReturnList() {
         List<Task> tasks = List.of(buildTask());
 
-        when(taskRepositoryMock.findTaskByStatus("completed")).thenReturn(tasks);
+        when(taskRepositoryMock.findTaskByStatus(TaskStatus.COMPLETED)).thenReturn(tasks);
 
-        List<Task> result = taskService.getTaskByStatus("completed");
+        List<Task> result = taskService.getTaskByStatus(TaskStatus.COMPLETED);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(taskRepositoryMock, times(1)).findTaskByStatus("completed");
+        verify(taskRepositoryMock, times(1)).findTaskByStatus(TaskStatus.COMPLETED);
     }
 
     @Test
     void completeTask_existingTask_shouldUpdateStatus() {
         Task task = buildTask();
-        task.setStatus("pending");
+        task.setStatus(TaskStatus.IN_PROGRESS);
 
         when(taskRepositoryMock.findById(1)).thenReturn(Optional.of(task));
         when(taskRepositoryMock.save(any(Task.class))).thenReturn(task);
@@ -94,7 +98,7 @@ public class TaskServiceImplTest {
         Task result = taskService.completeTask(1);
 
         assertNotNull(result);
-        assertEquals("completed", result.getStatus());
+        assertEquals(TaskStatus.COMPLETED, result.getStatus());
         verify(taskRepositoryMock, times(1)).save(task);
     }
 
@@ -110,43 +114,45 @@ public class TaskServiceImplTest {
     }
 
     @Test
-    void getAndSortTask_withStatusAndCreatedAtSort_shouldCallFindByStatusIgnoreCase() {
-        List<Task> tasks = List.of(buildTask());
+    void listTasks_withStatusAndLimit_shouldCallFindByStatus() {
+        Task task = buildTask();
+        Page<Task> page = new PageImpl<>(List.of(task));
 
-        when(taskRepositoryMock.findByStatusIgnoreCase(eq("completed"), any())).thenReturn(tasks);
+        when(taskRepositoryMock.findByStatus(eq(TaskStatus.PENDING), any(PageRequest.class))).thenReturn(page);
 
-        List<Task> result = taskService.getAndSortTasks("completed", "created_at");
+        List<Task> result = taskService.getTasks(TaskStatus.PENDING, null,10);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(taskRepositoryMock, times(1)).findByStatusIgnoreCase(eq("completed"), any());
+        verify(taskRepositoryMock, times(1)).findByStatus(eq(TaskStatus.PENDING), any());
         verify(taskRepositoryMock, never()).findAll(any(Sort.class));
     }
 
     @Test
-    void getAndSortTasks_withStatusOnly_shouldUseUnsorted() {
+    void listTasks_withStatusOnly_shouldCallFindByStatus() {
+        Task task = buildTask();
+        Page<Task> page = new PageImpl<>(List.of(task));
 
-        List<Task> tasks = List.of(Task.builder().title("Test").build());
+        when(taskRepositoryMock.findByStatus(eq(TaskStatus.PENDING), any(PageRequest.class))).thenReturn(page);
 
-        when(taskRepositoryMock.findAll(any(Sort.class))).thenReturn(tasks);
+        List<Task> result = taskService.getTasks(TaskStatus.PENDING, null,null);
 
-        List<Task> result = taskService.getAndSortTasks(null, "created_at");
-
+        assertNotNull(result);
         assertEquals(1, result.size());
-        verify(taskRepositoryMock, times(1)).findAll(any(Sort.class));
-        verify(taskRepositoryMock, never()).findByStatusIgnoreCase(any(), any());
+        verify(taskRepositoryMock, times(1)).findByStatus(eq(TaskStatus.PENDING), any());
+        verify(taskRepositoryMock, never()).findAll(any(Sort.class));
     }
 
     @Test
-    void getAndSortTasks_noStatus_shouldCallFindAll() {
-        List<Task> tasks = List.of(buildTask());
-        when(taskRepositoryMock.findAll(any(Sort.class))).thenReturn(tasks);
+    void listTasks_onlyLimit_shouldCallFindAll() {
+        Task task = buildTask();
+        Page<Task> page = new PageImpl<>(List.of(task));
+        when(taskRepositoryMock.findAll(any(PageRequest.class))).thenReturn(page);
 
-        List<Task> result = taskService.getAndSortTasks(null, null);
+        List<Task> result = taskService.getTasks(null,null, 10);
 
         assertThat(result).hasSize(1);
-        verify(taskRepositoryMock, times(1)).findAll(any(Sort.class));
-        verify(taskRepositoryMock, never()).findByStatusIgnoreCase(any(), any());
-
+        verify(taskRepositoryMock, times(1)).findAll(any(PageRequest.class));
+        verify(taskRepositoryMock, never()).findByStatus(any(), any());
     }
 }

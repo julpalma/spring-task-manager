@@ -2,6 +2,7 @@ package org.example.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.example.enums.TaskStatus;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +16,7 @@ public class TaskRequest {
 
     private String title;
     private String description;
-    private String status = "pending";
+    private TaskStatus status;
     private LocalDateTime createdAt;
 
 }

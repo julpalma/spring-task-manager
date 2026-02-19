@@ -1,12 +1,8 @@
 package org.example.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
+import org.example.enums.TaskStatus;
 
 import java.time.LocalDateTime;
 
@@ -18,15 +14,19 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 @Entity(name= "task")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Builder.Default
     private int id = 0;
+
     private String title;
     private String description;
-    private String status;
-    private LocalDateTime createdAt;
 
+    @Enumerated(EnumType.STRING)
+    private TaskStatus status;
+
+    private LocalDateTime createdAt;
 }

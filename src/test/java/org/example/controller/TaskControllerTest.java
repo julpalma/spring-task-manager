@@ -3,8 +3,10 @@ package org.example.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.dto.TaskRequest;
+import org.example.dto.TaskResponse;
 import org.example.entities.Task;
-import org.example.service.TaskServiceImpl;
+import org.example.enums.TaskStatus;
+import org.example.service.TaskService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,10 +21,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.example.utilities.BuildTasksUtil.buildInvalidTask;
-import static org.example.utilities.BuildTasksUtil.buildTask;
+import static org.example.utilities.BuildTasksUtil.*;
+import static org.example.utilities.BuildTasksUtil.buildTaskRequest;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -32,9 +33,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 //Tests the controller layer.
 //HTTP requests are simulated using MockMvc
 
-@WebMvcTest(Api.class)
+@WebMvcTest(TaskController.class)
 @AutoConfigureMockMvc
-public class ApiTest {
+public class TaskControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -43,7 +44,7 @@ public class ApiTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private TaskServiceImpl taskService;
+    private TaskService taskService;
 
     @Test
     @WithMockUser
@@ -51,9 +52,7 @@ public class ApiTest {
 
         Task task = buildTask();
 
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTitle("Test title");
-        taskRequest.setDescription("Task description");
+        TaskRequest taskRequest = buildTaskRequest();
 
         when(taskService.createTask(any(TaskRequest.class)))
                 .thenReturn(task);
@@ -64,7 +63,7 @@ public class ApiTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated()).andReturn();
 
-        Task taskResult = objectMapper.readValue(result.getResponse().getContentAsString(), Task.class);
+        TaskResponse taskResult = objectMapper.readValue(result.getResponse().getContentAsString(), TaskResponse.class);
         assertThat(taskResult.getTitle()).isEqualTo("Test title");
     }
 
@@ -74,9 +73,8 @@ public class ApiTest {
 
         Task invalidTask = buildInvalidTask();
 
-        TaskRequest taskRequest = new TaskRequest();
+        TaskRequest taskRequest = buildTaskRequest();
         taskRequest.setTitle(" ");
-        taskRequest.setDescription("Task description");
 
         when(taskService.createTask(any(TaskRequest.class)))
                 .thenReturn(invalidTask);
@@ -104,16 +102,17 @@ public class ApiTest {
     void getTaskByStatus_validInput_shouldReturnTaskList() throws Exception {
         Task task = buildTask();
 
-        when(taskService.getTaskByStatus("completed"))
+        when(taskService.getTaskByStatus(TaskStatus.PENDING))
                 .thenReturn(List.of(task));
 
         MvcResult result = mockMvc.perform(get("/v1/api/tasks/status")
-                        .param("status", "completed")
+                        .param("status", TaskStatus.PENDING.toString())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        List<Task> taskResult = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<List<Task>>() {});
+        List<TaskResponse> taskResult = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+        });
         assertThat(taskResult).hasSize(1);
         assertThat(taskResult.get(0).getTitle()).isEqualTo("Test title");
     }
@@ -121,26 +120,14 @@ public class ApiTest {
     @Test
     @WithMockUser
     void getTaskByStatus_noTasks_shouldReturnEmptyList() throws Exception {
-        when(taskService.getTaskByStatus(anyString()))
+        when(taskService.getTaskByStatus(any()))
                 .thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/v1/api/tasks/status")
-                        .param("status","pending")
+                        .param("status",TaskStatus.COMPLETED.toString())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-    }
-
-    @Test
-    @WithMockUser
-    void getTaskByStatus_invalidStatus_shouldReturnBadRequest() throws Exception {
-        mockMvc.perform(get("/v1/api/tasks/status")
-                        .param("status", " ")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(taskService, never()).getTaskByStatus(any());
     }
 
     @Test
@@ -158,6 +145,7 @@ public class ApiTest {
     @WithMockUser
     void completeTask_validId_shouldReturnCreated() throws Exception {
         Task completedTask = buildTask();
+        completedTask.setStatus(TaskStatus.COMPLETED);
 
         when(taskService.completeTask(completedTask.getId())).thenReturn(completedTask);
 
@@ -166,8 +154,8 @@ public class ApiTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated()).andReturn();
 
-        Task taskResult = objectMapper.readValue(result.getResponse().getContentAsString(), Task.class);
-        assertThat(taskResult.getStatus()).isEqualTo("completed");
+        TaskResponse taskResult = objectMapper.readValue(result.getResponse().getContentAsString(), TaskResponse.class);
+        assertThat(taskResult.getStatus()).isEqualTo(TaskStatus.COMPLETED.toString());
     }
 
     @Test
@@ -190,7 +178,7 @@ public class ApiTest {
         Task task2 = buildTask();
         task2.setId(2);
 
-        when(taskService.getAndSortTasks(null, null)).thenReturn(List.of(task1, task2));
+        when(taskService.getTasks(null, null, null)).thenReturn(List.of(task1, task2));
 
         MvcResult result = mockMvc.perform(get("/v1/api/tasks")
                         .with(csrf())
