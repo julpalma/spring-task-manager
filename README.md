@@ -1,3 +1,5 @@
+![Build Status](https://github.com/julpalma/spring-task-manager/actions/workflows/build.yml/badge.svg)
+
 # 🌟 Spring Boot - Task Manager API
 
 A **Spring Boot REST API** to manage tasks, demonstrating clean architecture, interface-driven design, and proper unit testing.  
