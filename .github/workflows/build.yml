@@ -1,4 +1,4 @@
-name: Build Task Manager
+name: Build and Run Unit Tests
 
 on:
   push:
@@ -21,4 +21,4 @@ jobs:
           java-version: '17'
 
       - name: Build project
-        run: mvn clean install
+        run: mvn clean verify
