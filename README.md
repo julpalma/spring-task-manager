@@ -1,5 +1,7 @@
 [![Build Status](https://github.com/julpalma/spring-task-manager/actions/workflows/build.yml/badge.svg)](https://github.com/julpalma/spring-task-manager/actions)
 
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=julpalma_spring-task-manager)](https://sonarcloud.io/summary/new_code?id=julpalma_spring-task-manager)
+
 # 🌟 Spring Boot - Task Manager API
 
 Production-style REST API built with Spring Boot demonstrating clean architecture, unit testing, and CI with GitHub Actions.
