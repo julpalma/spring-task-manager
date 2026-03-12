@@ -1,6 +1,8 @@
-![Build Status](https://github.com/julpalma/spring-task-manager/actions/workflows/build.yml/badge.svg)
+[![Build Status](https://github.com/julpalma/spring-task-manager/actions/workflows/build.yml/badge.svg)](https://github.com/julpalma/spring-task-manager/actions)
 
 # 🌟 Spring Boot - Task Manager API
+
+Production-style REST API built with Spring Boot demonstrating clean architecture, unit testing, and CI with GitHub Actions.
 
 A **Spring Boot REST API** to manage tasks, demonstrating clean architecture, interface-driven design, and proper unit testing.  
 This project is designed as a portfolio-quality demonstration of backend development skills.
@@ -30,7 +32,27 @@ This project is designed as a portfolio-quality demonstration of backend develop
 - JUnit 5 + Mockito
 - Maven
 - Postman (for API testing)
+- GitHub Actions
+- Docker
 
+## CI/CD
+This project uses GitHub Actions for continuous integration.
+
+## API Documentation
+Swagger UI available at:
+[Swagger UI](http://localhost:8080/swagger-ui.html)
+
+## Architecture
+
+Client  
+↓  
+Controller  
+↓  
+Service  
+↓  
+Repository  
+↓  
+H2 Database
 ---
 
 ## ⚡ Getting Started
@@ -40,8 +62,9 @@ This project is designed as a portfolio-quality demonstration of backend develop
 - Java 17+
 - Maven
 - Postman (optional, for API testing)
+- Docker Desktop
 
-### Run the application
+### Run the application locally
 
 ```bash
 git clone <repo-url>
@@ -57,6 +80,24 @@ The API will start at: `http://localhost:8080` and you can access the H2 console
 - Password: leave empty
 
 You can now create tasks via the API and see them in the H2 console immediately. No external database setup is required.
+
+### Run the application with Docker
+
+```bash
+mvn clean package spring-boot:repackage
+docker-compose up --build
+```
+The app runs in a container
+
+H2 in-memory database is used (no external DB required)
+
+Swagger UI: http://localhost:8080/swagger-ui.html
+
+API base: http://localhost:8080/v1/api/tasks
+
+H2 console: http://localhost:8080/h2-console
+
+⚠️ Note: H2 is an in-memory database; all data is lost when the container stops.
 
 ---
 
@@ -154,7 +195,7 @@ You can now create tasks via the API and see them in the H2 console immediately.
 }
 ```
 
-**Error Response (Task not found, 500):**
+**Error Response (Task not found, 404):**
 
 ```json
 {
